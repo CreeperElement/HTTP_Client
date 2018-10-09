@@ -1,4 +1,4 @@
-"""
+r"""
 - CS2911 - 011
 - Fall 2017
 - Lab 5
@@ -72,5 +72,46 @@ def make_http_request(host, port, resource, file_name):
  
     return 500  # Replace this "server error" with the actual status code
 
+def create_request(host, port, resource, file_name):
+    """
+        Takes the arguments, and creates a TCP connection which points
+      to the specified item. It also then creates a byte object representing the ASCII request.
+      Both of these are then returned.
+    :param host:
+    :param port:
+    :param resource:
+    :param file_name:
+    :return: (tcp_socket, request_bytestring)
+    :rtype: socket and bytestring
+    :author: Seth Fenske
+    """
 
+def recieve_request(tcp_socket, request_bytestring):
+    """
+    Uses the socket and bytestring to open the connection
+    to the server and listens for a response. It then returns the response from the server.
+    :param tcp_socket:
+    :param request_bytestring:
+    :return: (server response)
+    :rtype: byte object
+    :author: Vincent Krenz
+    """
+
+def divide_response(response_bytes):
+    """
+    Takes the entire response and looks for where the header terminates.
+    It simply returns a tuple. First element is a string representing the header response.
+    The second item is the byte object representing the payload.
+    :param response_bytes:
+    :return (header, body)
+    :author: Seth Fenske
+    """
+def status_code(header):
+    """
+    Finds and returns the status code of the http response
+    :param header:
+    :return: status code
+    :rtype: int
+    :author: Vincent Krenz
+    """
 main()
