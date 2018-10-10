@@ -90,7 +90,6 @@ def recieve_request(tcp_socket):
     :rtype: byte object
     :author: Vincent Krenz
     """
-
     divide_response(tcp_socket)
 
 def divide_response(sock):
@@ -104,16 +103,17 @@ def divide_response(sock):
     """
 
     header_bytes = get_header_bytes(sock)
+    print(header_bytes.decode("ASCII"))
     parse_header(header_bytes)
 
 def get_header_bytes(sock):
-    byte_1 = sock.recv(1)
-    byte_2 = sock.recv(1)
-    byte_3 = sock.recv(1)
     byte_4 = sock.recv(1)
+    byte_3 = sock.recv(1)
+    byte_2 = sock.recv(1)
+    byte_1 = sock.recv(1)
     message = b''
 
-    while(byte_1 != b'\r' and byte_2 != b'\n' and byte_3 != b'\r' and byte_4 != b'\n'):
+    while byte_1 != b'\r' and byte_2 != b'\n' and byte_3 != b'\r' and byte_4 != b'\n':
         message += byte_4
         byte_4 = byte_3
         byte_3 = byte_2
@@ -137,6 +137,9 @@ def parse_header(header_bytes):
     header_dict = {}
     position = 0;
     version, rep_code, response_text = read_header_bytes(header_bytes, position)
+
+    print(version.decode("ASCII") + ":::" + rep_code.decode("ASCII") + ":::" + response_text.decode("ASCII"))
+
     fill_dictionary(header_bytes, header_dict, position)
 
     if 'Content-Length:' in header_dict:
