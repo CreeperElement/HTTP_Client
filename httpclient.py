@@ -69,10 +69,12 @@ def make_http_request(host, port, resource, file_name):
     :return: the status code
     :rtype: int
     """
+
+    sock, message = create_request(host, port, resource)
  
     return 500  # Replace this "server error" with the actual status code
 
-def create_request(host, port, resource, file_name):
+def create_request(host, port, resource):
     """
         Takes the arguments, and creates a TCP connection which points
       to the specified item. It also then creates a byte object representing the ASCII request.
@@ -80,11 +82,18 @@ def create_request(host, port, resource, file_name):
     :param host:
     :param port:
     :param resource:
-    :param file_name:
     :return: (tcp_socket, request_bytestring)
     :rtype: socket and bytestring
     :author: Seth Fenske
     """
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect((host, port))
+
+    message = b'GET ' + resource
+
+    return sock, message
+
 
 def recieve_request(tcp_socket, request_bytestring):
     """
@@ -97,7 +106,7 @@ def recieve_request(tcp_socket, request_bytestring):
     :author: Vincent Krenz
     """
 
-def divide_response(response_bytes):
+def divide_response(sock):
     """
     Takes the entire response and looks for where the header terminates.
     It simply returns a tuple. First element is a string representing the header response.
@@ -106,6 +115,25 @@ def divide_response(response_bytes):
     :return (header, body)
     :author: Seth Fenske
     """
+
+    httpVersion = scan_until_space(sock)
+    httpStatusCode = scan_until_space(sock)
+
+
+
+
+def scan_until_space(sock):
+    lastByte = sock.recv(1)
+    currentByte = sock.recv(1)
+    message = lastByte
+
+    while (lastByte != b'\x0D' and currentByte != b'\x0A'):
+        message = message + currentByte
+        lastByte = currentByte
+        currentByte = sock.recv(1)
+
+    return message
+
 def status_code(header):
     """
     Finds and returns the status code of the http response
