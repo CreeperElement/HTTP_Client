@@ -172,5 +172,6 @@ def status_code(header):
     :return: status code
     :rtype: int
     :author: Vincent Krenz
-    ""
+    """
+
 main()
