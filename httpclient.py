@@ -70,40 +70,22 @@ def make_http_request(host, port, resource, file_name):
     :rtype: int
     """
 
-    sock, message = create_request(host, port, resource)
- 
-    return 500  # Replace this "server error" with the actual status code
-
-def create_request(host, port, resource):
-    """
-        Takes the arguments, and creates a TCP connection which points
-      to the specified item. It also then creates a byte object representing the ASCII request.
-      Both of these are then returned.
-    :param host:
-    :param port:
-    :param resource:
-    :return: (tcp_socket, request_bytestring)
-    :rtype: socket and bytestring
-    :author: Seth Fenske
-    """
-
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect((host, port))
 
     message = b'GET ' + resource + b' HTTP/1.1' + b'\x0D\x0A' + b'Host: msoe.us\r\nConnection: keep-alive\r\n\r\n'
 
     sock.sendall(message)
-    recieve_request(sock, message)
+    recieve_request(sock)
 
-    return sock, message
+    return 500  # Replace this "server error" with the actual status code
 
 
-def recieve_request(tcp_socket, request_bytestring):
+def recieve_request(tcp_socket):
     """
     Uses the socket and bytestring to open the connection
     to the server and listens for a response. It then returns the response from the server.
     :param tcp_socket:
-    :param request_bytestring:
     :return: (server response)
     :rtype: byte object
     :author: Vincent Krenz
@@ -120,13 +102,25 @@ def divide_response(sock):
     :return (header, body)
     :author: Seth Fenske
     """
-    httpVersion = scan_until_space(sock)
-    httpStatusCode = scan_until_space(sock)
-    httpCodeMessage = scan_until_space(sock)
 
-    print(httpVersion.decode("ASCII") + ":::" + httpStatusCode.decode("ASCII") + " ::: " + httpCodeMessage.decode("ASCII"))
+    header_bytes = get_header_bytes(sock)
+    parse_header(header_bytes)
 
+def get_header_bytes(sock):
+    byte_1 = sock.recv(1)
+    byte_2 = sock.recv(1)
+    byte_3 = sock.recv(1)
+    byte_4 = sock.recv(1)
+    message = b''
 
+    while(byte_1 != b'\r' and byte_2 != b'\n' and byte_3 != b'\r' and byte_4 != b'\n'):
+        message += byte_4
+        byte_4 = byte_3
+        byte_3 = byte_2
+        byte_2 = byte_1
+        byte_1 = sock.recv(1)
+
+    return message
 
 
 def scan_until_space(sock):
@@ -139,39 +133,54 @@ def scan_until_space(sock):
 
     return message
 
-def get_after_header(sock):
-    first_byte = sock.recv(1)
-    second_byte = sock.recv(1)
-    third_byte = sock.recv(1)
-    fourth_byte = sock.recv(1)
+def parse_header(header_bytes):
+    header_dict = {}
+    position = 0;
+    version, rep_code, response_text = read_header_bytes(header_bytes, position)
+    fill_dictionary(header_bytes, header_dict, position)
 
-    while(first_byte != b'\r' and second_byte != '\n' and third_byte !=b'\r' and fourth_byte != b'\n'):
-        fourth_byte = third_byte
-        third_byte = second_byte
-        second_byte = first_byte
-        first_byte = sock.recv(1)
+    if 'Content-Length:' in header_dict:
+        print(header_dict['Content-Length:'])
+    else:
+        if 'Transfer-Encoding:' in header_dict:
+            print(header_dict['Transfer-Encoding:'])
 
-    #Now we reached the end of the header
-    data = b''
+def fill_dictionary(header_bytes, header_dict, position):
+    while header_bytes[position: position+4]!= b'\r\n\r\n':
+        add_key_val_pair(header_bytes, header_dict, position)
 
-    while (first_byte != b'\r' and second_byte != '\n' and third_byte != b'\r' and fourth_byte != b'\n'):
-        fourth_byte = third_byte
-        third_byte = second_byte
-        second_byte = first_byte
-        first_byte = sock.recv(1)
-        if(first_byte != b'\r' and second_byte != '\n' and third_byte != b'\r' and fourth_byte != b'\n'):
-            data = data + fourth_byte
+def add_key_val_pair(bytes, dictionary, position):
+    key = read_bytes_until_space(bytes, position)
+    value = read_bytes_until_newline_return(bytes, position)
+    dictionary[key] = value
 
 
+def read_header_bytes(header_bytes, position):
+    version = read_bytes_until_space(header_bytes, position)
+    code = read_bytes_until_space(header_bytes, position)
+    description = read_bytes_until_space(header_bytes, position)
+    return version, code, description
 
 
-def status_code(header):
-    """
-    Finds and returns the status code of the http response
-    :param header:
-    :return: status code
-    :rtype: int
-    :author: Vincent Krenz
-    """
+def read_bytes_until_space(header_bytes, position):
+    lastByte = header_bytes[position: position+1]
+    message = b''
+    while (lastByte != b' '):
+        message += lastByte
+        position += 1
+        lastByte = header_bytes[position: position+1]
+    return message
+
+def read_bytes_until_newline_return(header_bytes, position):
+    lastByte = header_bytes[position: position+1]
+    position += 1
+    current_byte = header_bytes[position: position+1]
+    message = b''
+    while (lastByte != b'\r' and current_byte!='\n'):
+        message += lastByte
+        position += 1
+        lastByte = header_bytes[position: position+1]
+    return message
+
 
 main()
