@@ -90,7 +90,10 @@ def create_request(host, port, resource):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect((host, port))
 
-    message = b'GET ' + resource
+    message = b'GET ' + resource + b' HTTP/1.1' + b'\x0D\x0A' + b'Host: msoe.us\r\nConnection: keep-alive\r\n\r\n'
+
+    sock.sendall(message)
+    recieve_request(sock, message)
 
     return sock, message
 
@@ -106,6 +109,8 @@ def recieve_request(tcp_socket, request_bytestring):
     :author: Vincent Krenz
     """
 
+    divide_response(tcp_socket)
+
 def divide_response(sock):
     """
     Takes the entire response and looks for where the header terminates.
@@ -115,22 +120,22 @@ def divide_response(sock):
     :return (header, body)
     :author: Seth Fenske
     """
-
     httpVersion = scan_until_space(sock)
     httpStatusCode = scan_until_space(sock)
+    httpCodeMessage = scan_until_space(sock)
+
+    print(httpVersion.decode("ASCII") + ":::" + httpStatusCode.decode("ASCII") + " ::: " + httpCodeMessage.decode("ASCII"))
 
 
 
 
 def scan_until_space(sock):
     lastByte = sock.recv(1)
-    currentByte = sock.recv(1)
-    message = lastByte
+    message = b''
 
-    while (lastByte != b'\x0D' and currentByte != b'\x0A'):
-        message = message + currentByte
-        lastByte = currentByte
-        currentByte = sock.recv(1)
+    while (lastByte != b' '):
+        message = message + lastByte
+        lastByte = sock.recv(1)
 
     return message
 
