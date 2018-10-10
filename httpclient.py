@@ -57,6 +57,12 @@ def get_http_resource(url, file_name):
         print('get_http_resource: URL parse failed, request not sent')
 
 
+def write_binary_file(data, file_name):
+    with open(file_name, "wb") as file:
+        print(type(data))
+
+        file.write(data)
+
 def make_http_request(host, port, resource, file_name):
     """
     Get an HTTP resource from a server
@@ -76,9 +82,11 @@ def make_http_request(host, port, resource, file_name):
     message = b'GET ' + resource + b' HTTP/1.1' + b'\x0D\x0A' + b'Host: msoe.us\r\nConnection: keep-alive\r\n\r\n'
 
     sock.sendall(message)
-    recieve_request(sock)
+    response, data = recieve_request(sock)
 
-    return 500  # Replace this "server error" with the actual status code
+    write_binary_file(data, file_name)
+
+    return response  # Replace this "server error" with the actual status code
 
 
 def recieve_request(tcp_socket):
@@ -90,7 +98,21 @@ def recieve_request(tcp_socket):
     :rtype: byte object
     :author: Vincent Krenz
     """
-    divide_response(tcp_socket)
+    status_code, data = divide_response(tcp_socket)
+    return status_code, data
+
+
+def get_by_length(sock, content_length):
+    body = b''
+    for i in range(0, content_length):
+        body+=sock.recv(1)
+
+    return body
+
+
+def get_by_chunking():
+    pass
+
 
 def divide_response(sock):
     """
@@ -101,9 +123,17 @@ def divide_response(sock):
     :return (header, body)
     :author: Seth Fenske
     """
-
     header_bytes = get_header_bytes(sock)
-    parse_header(header_bytes)
+    response_code, data_by_chunking, content_length = parse_header(header_bytes)
+
+    if(data_by_chunking and content_length == 0):
+        data = get_by_chunking()
+    else:
+        data = get_by_length(sock, content_length)
+        print("Length: " + str(content_length))
+
+    return response_code, data
+
 
 def get_header_bytes(sock):
     byte_4 = sock.recv(1)
@@ -139,11 +169,16 @@ def parse_header(header_bytes):
     version, rep_code, response_text, position = read_header_bytes(header_bytes, position)
     header_dict, position = fill_dictionary(header_bytes, header_dict, position)
 
+    data_by_chunking = False
+    content_length = 0
+
     if b'Content-Length:' in header_dict:
-        print(header_dict[b'Content-Length:'])
+        content_length = int(header_dict[b'Content-Length:'])
     else:
         if b'Transfer-Encoding:' in header_dict:
-            print(header_dict[b'Transfer-Encoding:'])
+            data_by_chunking = True
+
+    return rep_code, data_by_chunking, content_length
 
 def fill_dictionary(header_bytes, header_dict, position):
     while header_bytes[position: position+4]!= b'':
