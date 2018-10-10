@@ -103,7 +103,6 @@ def divide_response(sock):
     """
 
     header_bytes = get_header_bytes(sock)
-    print(header_bytes.decode("ASCII"))
     parse_header(header_bytes)
 
 def get_header_bytes(sock):
@@ -113,7 +112,7 @@ def get_header_bytes(sock):
     byte_1 = sock.recv(1)
     message = b''
 
-    while byte_1 != b'\r' and byte_2 != b'\n' and byte_3 != b'\r' and byte_4 != b'\n':
+    while not(byte_1 == b'\n' and byte_2 == b'\r' and byte_3 == b'\n' and byte_4 == b'\r'):
         message += byte_4
         byte_4 = byte_3
         byte_3 = byte_2
@@ -136,54 +135,57 @@ def scan_until_space(sock):
 def parse_header(header_bytes):
     header_dict = {}
     position = 0;
-    version, rep_code, response_text = read_header_bytes(header_bytes, position)
 
-    print(version.decode("ASCII") + ":::" + rep_code.decode("ASCII") + ":::" + response_text.decode("ASCII"))
+    version, rep_code, response_text, position = read_header_bytes(header_bytes, position)
+    header_dict, position = fill_dictionary(header_bytes, header_dict, position)
 
-    fill_dictionary(header_bytes, header_dict, position)
-
-    if 'Content-Length:' in header_dict:
-        print(header_dict['Content-Length:'])
+    if b'Content-Length:' in header_dict:
+        print(header_dict[b'Content-Length:'])
     else:
-        if 'Transfer-Encoding:' in header_dict:
-            print(header_dict['Transfer-Encoding:'])
+        if b'Transfer-Encoding:' in header_dict:
+            print(header_dict[b'Transfer-Encoding:'])
 
 def fill_dictionary(header_bytes, header_dict, position):
-    while header_bytes[position: position+4]!= b'\r\n\r\n':
-        add_key_val_pair(header_bytes, header_dict, position)
+    while header_bytes[position: position+4]!= b'':
+        position, dict = add_key_val_pair(header_bytes, header_dict, position)
+    return dict, position
 
 def add_key_val_pair(bytes, dictionary, position):
-    key = read_bytes_until_space(bytes, position)
-    value = read_bytes_until_newline_return(bytes, position)
+    key, position = read_bytes_until_space(bytes, position)
+    value, position = read_bytes_until_newline_return(bytes, position)
     dictionary[key] = value
+    return position, dictionary
 
 
 def read_header_bytes(header_bytes, position):
-    version = read_bytes_until_space(header_bytes, position)
-    code = read_bytes_until_space(header_bytes, position)
-    description = read_bytes_until_space(header_bytes, position)
-    return version, code, description
+    version, position = read_bytes_until_space(header_bytes, position)
+    code, position = read_bytes_until_space(header_bytes, position)
+    description, position = read_bytes_until_newline_return(header_bytes, position)
+    return version, code, description, position
 
 
 def read_bytes_until_space(header_bytes, position):
     lastByte = header_bytes[position: position+1]
     message = b''
-    while (lastByte != b' '):
+    while (lastByte != b'\x20'):
         message += lastByte
         position += 1
         lastByte = header_bytes[position: position+1]
-    return message
+    position += 1
+    return message, position
 
 def read_bytes_until_newline_return(header_bytes, position):
     lastByte = header_bytes[position: position+1]
     position += 1
     current_byte = header_bytes[position: position+1]
     message = b''
-    while (lastByte != b'\r' and current_byte!='\n'):
-        message += lastByte
+    while not(lastByte == b'\r' and current_byte==b'\n' or current_byte==b''):
+        message = message + lastByte
         position += 1
-        lastByte = header_bytes[position: position+1]
-    return message
+        lastByte = current_byte
+        current_byte = header_bytes[position: position+1]
+    position += 1
+    return message, position
 
 
 main()
