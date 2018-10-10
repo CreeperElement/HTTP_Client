@@ -139,6 +139,32 @@ def scan_until_space(sock):
 
     return message
 
+def get_after_header(sock):
+    first_byte = sock.recv(1)
+    second_byte = sock.recv(1)
+    third_byte = sock.recv(1)
+    fourth_byte = sock.recv(1)
+
+    while(first_byte != b'\r' and second_byte != '\n' and third_byte !=b'\r' and fourth_byte != b'\n'):
+        fourth_byte = third_byte
+        third_byte = second_byte
+        second_byte = first_byte
+        first_byte = sock.recv(1)
+
+    #Now we reached the end of the header
+    data = b''
+
+    while (first_byte != b'\r' and second_byte != '\n' and third_byte != b'\r' and fourth_byte != b'\n'):
+        fourth_byte = third_byte
+        third_byte = second_byte
+        second_byte = first_byte
+        first_byte = sock.recv(1)
+        if(first_byte != b'\r' and second_byte != '\n' and third_byte != b'\r' and fourth_byte != b'\n'):
+            data = data + fourth_byte
+
+
+
+
 def status_code(header):
     """
     Finds and returns the status code of the http response
