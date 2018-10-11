@@ -59,8 +59,6 @@ def get_http_resource(url, file_name):
 
 def write_binary_file(data, file_name):
     with open(file_name, "wb") as file:
-        print(type(data))
-
         file.write(data)
 
 def make_http_request(host, port, resource, file_name):
@@ -110,9 +108,23 @@ def get_by_length(sock, content_length):
     return body
 
 
-def get_by_chunking():
-    pass
+def get_by_chunking(sock):
+    data = b''
+    length = read_socket_until_newline(sock)
 
+    while length != b'':
+        data += get_chunk(sock, int(str(length.decode()), 16))
+        print(data.decode("ASCII"))
+        length = read_socket_until_newline(sock)
+
+    return data
+
+
+def get_chunk(sock, length):
+    data = b''
+    for i in range(0, length):
+        data += sock.recv(1)
+    return data
 
 def divide_response(sock):
     """
@@ -126,8 +138,8 @@ def divide_response(sock):
     header_bytes = get_header_bytes(sock)
     response_code, data_by_chunking, content_length = parse_header(header_bytes)
 
-    if(data_by_chunking and content_length == 0):
-        data = get_by_chunking()
+    if data_by_chunking and content_length == 0:
+        data = get_by_chunking(sock)
     else:
         data = get_by_length(sock, content_length)
         print("Length: " + str(content_length))
@@ -164,7 +176,7 @@ def scan_until_space(sock):
 
 def parse_header(header_bytes):
     header_dict = {}
-    position = 0;
+    position = 0
 
     version, rep_code, response_text, position = read_header_bytes(header_bytes, position)
     header_dict, position = fill_dictionary(header_bytes, header_dict, position)
@@ -208,6 +220,17 @@ def read_bytes_until_space(header_bytes, position):
         lastByte = header_bytes[position: position+1]
     position += 1
     return message, position
+
+def read_socket_until_newline(sock):
+    last_byte = sock.recv(1)
+    current_byte = sock.recv(1)
+    data = b''
+
+    while(not(last_byte==b'\r' and current_byte==b'\n')):
+        data += last_byte
+        last_byte = current_byte
+        current_byte = sock.recv(1)
+    return data
 
 def read_bytes_until_newline_return(header_bytes, position):
     lastByte = header_bytes[position: position+1]
