@@ -2,7 +2,7 @@ r"""
 - CS2911 - 011
 - Fall 2017
 - Lab 5
-- Names: Vincent Krenz, Seth Fenske
+- Names: Vincent Krenz (krenzva), Seth Fenske (fenskesd)
   - 
   - 
 

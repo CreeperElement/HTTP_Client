@@ -2,7 +2,7 @@
 - CS2911 - 0NN
 - Fall 2017
 - Lab N
-- Names:
+- Names: Seth Fenske(fenskesd), Vincent Krenz (krenzva)
   - 
   - 
 
