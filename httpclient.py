@@ -58,6 +58,13 @@ def get_http_resource(url, file_name):
 
 
 def write_binary_file(data, file_name):
+    """
+    Opens file and writes to it
+    :param data:
+    :param file_name:
+    :return: outputs a file
+    :author: Vincent Krenz
+    """
     with open(file_name, "wb") as file:
         file.write(data)
 
@@ -86,14 +93,12 @@ def make_http_request(host, port, resource, file_name):
 
     return response  # Replace this "server error" with the actual status code
 
-
 def recieve_request(tcp_socket):
     """
     Uses the socket and bytestring to open the connection
     to the server and listens for a response. It then returns the response from the server.
     :param tcp_socket:
-    :return: (server response)
-    :rtype: byte object
+    :return: status_code, data
     :author: Vincent Krenz
     """
     status_code, data = divide_response(tcp_socket)
@@ -101,6 +106,13 @@ def recieve_request(tcp_socket):
 
 
 def get_by_length(sock, content_length):
+    """
+    Gets the body's length
+    :param sock:
+    :param content_length:
+    :return: body
+    :author: Vincent Krenz
+    """
     body = b''
     for i in range(0, content_length):
         body+=sock.recv(1)
@@ -109,6 +121,12 @@ def get_by_length(sock, content_length):
 
 
 def get_by_chunking(sock):
+    """
+    Gets the message if the message is chunked
+    :param sock:
+    :return: data
+    :author: Seth Fenske
+    """
     data = b''
     length = read_socket_until_newline(sock)
 
@@ -121,6 +139,13 @@ def get_by_chunking(sock):
 
 
 def get_chunk(sock, length):
+    """
+    Gets the chunk from data
+    :param sock:
+    :param length:
+    :return: data
+    :author: Seth Fenske
+    """
     data = b''
     for i in range(0, length):
         data += sock.recv(1)
@@ -128,26 +153,30 @@ def get_chunk(sock, length):
 
 def divide_response(sock):
     """
-    Takes the entire response and looks for where the header terminates.
+     Takes the entire response and looks for where the header terminates.
     It simply returns a tuple. First element is a string representing the header response.
     The second item is the byte object representing the payload.
-    :param response_bytes:
-    :return (header, body)
+    :param sock:
+    :return: response_code, data
     :author: Seth Fenske
     """
     header_bytes = get_header_bytes(sock)
     response_code, data_by_chunking, content_length = parse_header(header_bytes)
-
     if data_by_chunking and content_length == 0:
         data = get_by_chunking(sock)
     else:
         data = get_by_length(sock, content_length)
         print("Length: " + str(content_length))
-
     return response_code, data
 
 
 def get_header_bytes(sock):
+    """
+    Iterates through each byte until it reaches the end of the payload
+    :param sock:
+    :return: message
+    :author: Vincent Krenz
+    """
     byte_4 = sock.recv(1)
     byte_3 = sock.recv(1)
     byte_2 = sock.recv(1)
@@ -160,11 +189,17 @@ def get_header_bytes(sock):
         byte_3 = byte_2
         byte_2 = byte_1
         byte_1 = sock.recv(1)
-
     return message
 
 
 def scan_until_space(sock):
+    """
+    Continues to take bytes for the message until a space
+    returns the message
+    :param sock:
+    :return: message
+    :author: Seth Fenske
+    """
     lastByte = sock.recv(1)
     message = b''
 
@@ -175,29 +210,52 @@ def scan_until_space(sock):
     return message
 
 def parse_header(header_bytes):
+    """
+    Creates a new dictionary for the header, adds to the dictionary, checks if the message is chunked,
+    returns whether the message is chunked, the content's length, and the rep code
+    :param header_bytes:
+    :return: rep_code, data_by_chunking, content_length
+    :author: Seth Fenske
+    """
     header_dict = {}
     position = 0
-
     version, rep_code, response_text, position = read_header_bytes(header_bytes, position)
     header_dict, position = fill_dictionary(header_bytes, header_dict, position)
-
     data_by_chunking = False
     content_length = 0
-
     if b'Content-Length:' in header_dict:
         content_length = int(header_dict[b'Content-Length:'])
     else:
         if b'Transfer-Encoding:' in header_dict:
             data_by_chunking = True
-
     return rep_code, data_by_chunking, content_length
 
+
 def fill_dictionary(header_bytes, header_dict, position):
+    """
+    Fills the dictionary with the parts of the header
+    returns the dictionary and the position
+    :param header_bytes:
+    :param header_dict:
+    :param position:
+    :return: dict, position
+    :author: Seth Fenske
+    """
     while header_bytes[position: position+4]!= b'':
         position, dict = add_key_val_pair(header_bytes, header_dict, position)
     return dict, position
 
+
 def add_key_val_pair(bytes, dictionary, position):
+    """
+    Adds a key to a value pair
+    returns the position and dictionary
+    :param bytes:
+    :param dictionary:
+    :param position:
+    :return: position, dictionary
+    :author: Seth Fenske
+    """
     key, position = read_bytes_until_space(bytes, position)
     value, position = read_bytes_until_newline_return(bytes, position)
     dictionary[key] = value
@@ -205,6 +263,13 @@ def add_key_val_pair(bytes, dictionary, position):
 
 
 def read_header_bytes(header_bytes, position):
+    """
+    Reads the total header and returns
+    :param header_bytes:
+    :param position:
+    :return: version, code, description, position
+    :author: Vincent Krenz
+    """
     version, position = read_bytes_until_space(header_bytes, position)
     code, position = read_bytes_until_space(header_bytes, position)
     description, position = read_bytes_until_newline_return(header_bytes, position)
@@ -212,6 +277,13 @@ def read_header_bytes(header_bytes, position):
 
 
 def read_bytes_until_space(header_bytes, position):
+    """
+    reads bytes until a space is found
+    :param header_bytes:
+    :param position:
+    :return: message, position
+    :author: Vincent Krenz
+    """
     lastByte = header_bytes[position: position+1]
     message = b''
     while (lastByte != b'\x20'):
@@ -221,7 +293,14 @@ def read_bytes_until_space(header_bytes, position):
     position += 1
     return message, position
 
+
 def read_socket_until_newline(sock):
+    """
+    reads from the socket until a newline character is hit
+    :param sock:
+    :return: data
+    :author: Seth Fenske
+    """
     last_byte = sock.recv(1)
     current_byte = sock.recv(1)
     data = b''
@@ -233,6 +312,13 @@ def read_socket_until_newline(sock):
     return data
 
 def read_bytes_until_newline_return(header_bytes, position):
+    """
+    Reads bytes until a newline return shows up
+    :param header_bytes:
+    :param position:
+    :return: message, position
+    :author: Seth Fenske
+    """
     lastByte = header_bytes[position: position+1]
     position += 1
     current_byte = header_bytes[position: position+1]
