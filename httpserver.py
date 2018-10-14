@@ -64,9 +64,55 @@ def handle_request(request_socket):
     :param request_socket: socket representing TCP connection from the HTTP client_socket
     :return: None
     """
+    request_type = read_until_space(request_socket)
+    status_code = b''
+    if(request_type == b'GET'):
+        requested_file = read_until_space(request_socket)
+        file_path = requested_file.decode("ASCII")
+        file_path = file_path[1: len(file_path) - 1]
+        if file_exists(file_path):
+            file = open(file_path)
+            mime_type = get_mime_type(file_path)
+            file_length = get_file_size(file_path)
+            message = read_until_CRLF(request_socket)
 
-    pass  # Replace this line with your code
+        else:
+              print("Not found " + file_path)
+              status_code = b'404'
 
+        status_code = b'200'#
+    else:
+        status_code = b'404'
+
+def file_exists(file):
+    try:
+        file = open(file, "w+")
+        return True
+    except FileNotFoundError:
+        print('FOund in')
+        return False
+
+def read_until_space(sock):
+    byte_0 = sock.recv(1)
+    message = b''
+
+    while(byte_0!=b' '):
+        message += byte_0
+        byte_0 = sock.recv(1)
+
+    return message
+
+def read_until_CRLF(sock):
+    byte_1 = sock.recv(1)
+    byte_0 = sock.recv(1)
+
+    message = b''
+
+    while not(byte_0 == b'\xOD' and byte_1 == b'\xOA'):
+        byte_1 = byte_0
+        byte_0 = sock.recv(1)
+        message += byte_1
+    return message
 
 # ** Do not modify code below this line.  You should add additional helper methods above this line.
 
