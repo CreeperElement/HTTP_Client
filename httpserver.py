@@ -70,23 +70,39 @@ def handle_request(request_socket):
         requested_file = read_until_space(request_socket)
         file_path = requested_file.decode("ASCII")
         file_path = file_path[1: len(file_path) - 1]
+
         if file_exists(file_path):
             file = open(file_path)
             mime_type = get_mime_type(file_path)
-            file_length = get_file_size(file_path)
-            message = read_until_CRLF(request_socket)
+            data_payload = get_data_payload(file)
+            file_length = int(get_file_size(file_path))
+            http_version = read_until_CRLF(request_socket)
+
+            packet_headers = bytes(http_version) + b' 200 OK\r\n'
+            packet_headers += b'Content-Length: ' + str(file_length).encode("ASCII") + b'\r\n'
+            packet_headers += b'Content-Type: ' + bytes(mime_type.encode("ASCII")) + b'\r\n\r\n'
+
+
+            request_socket.sendall(packet_headers + data_payload)
+            print(packet_headers)
+            print(data_payload)
 
         else:
               print("Not found " + file_path)
               status_code = b'404'
 
-        status_code = b'200'#
+        status_code = b'200'
     else:
         status_code = b'404'
 
+def get_data_payload(file):
+    body = bytes(file.read().encode("ASCII"))
+    body += b'\r\n\r\n'
+    return body
+
 def file_exists(file):
     try:
-        file = open(file, "w+")
+        file = open(file, "r")
         return True
     except FileNotFoundError:
         print('FOund in')
@@ -103,15 +119,15 @@ def read_until_space(sock):
     return message
 
 def read_until_CRLF(sock):
-    byte_1 = sock.recv(1)
-    byte_0 = sock.recv(1)
+    last_byte = sock.recv(1)
+    first_byte = sock.recv(1)
 
     message = b''
 
-    while not(byte_0 == b'\xOD' and byte_1 == b'\xOA'):
-        byte_1 = byte_0
-        byte_0 = sock.recv(1)
-        message += byte_1
+    while not(last_byte == b'\r' and first_byte == b'\n'):
+        message += last_byte
+        last_byte = first_byte
+        first_byte = sock.recv(1)
     return message
 
 # ** Do not modify code below this line.  You should add additional helper methods above this line.
