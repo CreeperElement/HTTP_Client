@@ -1,6 +1,321 @@
-<DOCTYPE html>
-<html>
-	<body>
-		<p1>Hello</p>
-	</body>
-</html>
+<!DOCTYPE html>
+<html lang="en"><head>
+<title>Lab 6: CS2911 - Computer Networking</title>
+<meta charset="utf-8">
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<link rel="shortcut icon" href="https://faculty-web.msoe.edu/yoder/favicon.ico">
+<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;">
+<link rel="stylesheet" type="text/css" href="index_files/style15.css">
+<!--[if IE]>
+<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+		<script src="index_files/prettify.js" type="text/javascript"></script>
+</head><body onload="prettyPrint()">
+ 
+<header>
+<nav>
+  <div id="navigation" class="clearfix"><a href="https://faculty-web.msoe.edu/yoder/" id="logo">Dr. Josiah Yoder</a>
+    <div id="menu">
+      <ul>
+        <li><a href="https://faculty-web.msoe.edu/yoder/">Home</a></li>
+        <li><a href="https://faculty-web.msoe.edu/yoder/cs2911/">CS2911</a></li>
+        <li><a href="https://faculty-web.msoe.edu/yoder/cs3841/">CS3841</a></li>
+        <li><a href="https://faculty-web.msoe.edu/yoder/current">Sched</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+</header>
+
+
+		<section class="wrapper clearfix" role="main">
+		<div class="sidebarSpacer">
+		<aside id="sidebar">
+  <section class="links">
+    <h1>Class stuff</h1>
+    <ul>
+      <li><a href="https://faculty-web.msoe.edu/yoder/cs2911/">Overview</a></li>
+      <li><a href="https://faculty-web.msoe.edu/yoder/cs2911/Schedule">Schedule</a></li>
+      <li><a href="https://faculty-web.msoe.edu/yoder/cs2911/Outcomes">Outcomes</a></li>
+      <li><a href="https://faculty-web.msoe.edu/yoder/cs2911/Videos">Videos</a></li>
+      <li><a href="https://faculty-web.msoe.edu/yoder/cs2911/CodingStandard"><tip>Standard<ttxt>Coding Standard</ttxt></tip></a></li>
+      <li><a href="https://faculty-web.msoe.edu/yoder/cs2911/InstructionalVocabulary"><tip>Vocabulary<ttxt>Instructional Vocabulary</ttxt></tip></a></li>
+      <li><a href="https://faculty-web.msoe.edu/yoder/cs2911/code/">Code</a></li>
+      <li><a href="https://faculty-web.msoe.edu/yoder/cs2911/slides/">Slides</a></li>
+    </ul>
+    <ul>
+      <li><a href="https://faculty-web.msoe.edu/yoder/cs2911/Lab1">Lab 1</a></li>
+      <li><a href="https://faculty-web.msoe.edu/yoder/cs2911/Lab2">Lab 2</a></li>
+      <li><a href="https://faculty-web.msoe.edu/yoder/cs2911/Lab3">Lab 3</a></li>
+      <li><a href="https://faculty-web.msoe.edu/yoder/cs2911/Lab4">Lab 4</a></li>
+      <li><a href="https://faculty-web.msoe.edu/yoder/cs2911/Lab5">Lab 5</a></li>
+      <li><a href="https://faculty-web.msoe.edu/yoder/cs2911/Lab6">Lab 6</a></li>
+      <li><a href="https://faculty-web.msoe.edu/yoder/cs2911/Lab7">Lab 7</a></li>
+      <!--
+      <li><a href="Lab8">Lab 8</a></li>
+      <li><a href="Lab9">Lab 9</a></li>
+      -->
+    </ul>
+  </section>
+</aside>
+
+		<article>
+		<div class="badge"><div class="info">
+		<span class="cNum">
+CS2911
+		</span><div class="lRing"></div><div class="rRing"></div></div>
+		<div class="dueDate">
+Lab 6
+		</div></div>
+
+		<div class="banner"><h1>
+CS2911 Lab 6: HTTP Server
+		</h1><div class="lRing"></div><div class="rRing"></div></div>
+
+		<div class="content clearfix">
+
+<h2>Resources</h2>
+<ul>
+<li><a href="https://faculty-web.msoe.edu/yoder/cs2911/lab6res/CS2911Lab6Checklist.pdf">Lab Checklist</a> — I will provide a paper copy of this.
+</li><li><a href="https://faculty-web.msoe.edu/yoder/cs2911/CodingStandard">CS2911 Coding Standard</a>
+</li></ul>
+
+<p>This lab is due at the beginning of the following lab's lab period. 
+Please work in teams of two unless approved by the instructor.  Please 
+submit only one report per team.</p>
+
+<h2>Introduction</h2>
+
+<p>The goal of this lab is to write a short Python program, to respond 
+to HTTP requests and return web resources, acting as an HTTP server. </p>
+
+<h2>Procedure</h2>
+
+<ol>
+<li>Download the skeleton Python template: <a href="https://faculty-web.msoe.edu/yoder/cs2911/lab6res/httpserver.py">httpserver.py</a>
+</li><li>Edit the header of the file to include your team members' names and usernames.
+</li><li>Complete the handle_request method to parse a request and 
+respond by returning the designated resource. You will want to add other
+ helper methods, but do not change any other code provided in the 
+template.
+ <ul>
+ <li>Note that this method will be invoked on a separate thread for each
+ request received. This means that there may be multiple copies of this 
+method running simultaneously, if the web client opens more than one 
+connection at a time (e.g., to download resources that are referenced in
+ a main HTML file).
+ </li><li>For this reason, you should not rely on any global variables, 
+but instead pass data as arguments to related functions. Each thread 
+will have its own execution stack.
+ </li></ul>
+<!--li>Add comments at the end of your Python file, with the following information:
+ <ul>
+ <li>A description of the functionality you implemented and the results of your testing.
+ <li>Comments on your experience in completing the lab, including any problems you encountered. Briefly explain what you learned.
+ <li>Questions and suggestions.
+ </ul-->
+</li></ol>
+
+<p>You may not use a prebuilt library like Lib/BaseHTTPServer; the point
+ of this lab is for you to understand the low-level implementation of 
+the HTTP protocol.</p>
+
+<p>You should use the utility functions that are included near the end 
+of the skeleton template file. Read the description for each function 
+and ask the instructor if you have questions about them.</p>
+
+<p>If this base functionality turns out to be too easy, you may 
+experiment with adding additional functions, but be sure the basic 
+requirements are still met.</p>
+
+<p>Plan as a team and divide up the primary responsibility for parts of the program in an equitable way.</p>
+
+<h2>Assignment details</h2>
+
+
+<ul>
+<li>Your server is only expected to handle "file" resources, so that you
+ can service a client request by returning the contents of a file 
+associated with the resource identifier.
+ <ul>
+ <li>You must be able to serve at least the following resources. Download each of them from the table below:
+
+<table>
+<thead>
+<tr>
+  <th align="left">Relative URL</th>
+  <th align="left">File path, relative to the directory with your Python server code file</th>
+  <th align="left">File to serve (<tip><mark>right-click</mark><ttxt>Right-click and select "save link as" to save<br>files instead of browsing to them<br>("Save target as" in IE)</ttxt></tip> to download)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td align="left"><strong><code>/</code></strong> (default)</td>
+  <td align="left">./index.html</td>
+  <td align="left"><a href="https://faculty-web.msoe.edu/yoder/cs2911/lab6res/index.html"><code>index.html</code></a></td>
+</tr>
+<tr>
+  <td align="left"><strong><code>/index.html</code></strong></td>
+  <td align="left">./index.html</td>
+  <td align="left"><a href="https://faculty-web.msoe.edu/yoder/cs2911/lab6res/index.html"><code>index.html</code></a></td>
+</tr>
+<tr>
+  <td align="left"><strong><code>/sebern1.jpg</code></strong></td>
+  <td align="left">./sebern1.jpg</td>
+  <td align="left"><a href="https://faculty-web.msoe.edu/yoder/cs2911/lab6res/sebern1.jpg"><code>sebern1.jpg</code></a></td>
+</tr>
+<tr>
+  <td align="left"><strong><code>/style.css</code></strong></td>
+  <td align="left">./style.css</td>
+  <td align="left"><a href="https://faculty-web.msoe.edu/yoder/cs2911/lab6res/style.css"><code>style.css</code></a></td>
+</tr>
+<tr>
+  <td align="left"><strong><code>/e-sebern2.gif</code></strong></td>
+  <td align="left">./e-sebern2.gif</td>
+  <td align="left"><a href="https://faculty-web.msoe.edu/yoder/cs2911/lab6res/e-sebern2.gif"><code>e-sebern2.gif</code></a></td>
+</tr>
+</tbody>
+</table>
+</li></ul>
+
+<p>Your server should look like <a href="https://seprof.sebern.com/">https://seprof.sebern.com/</a> when you browse to <a href="http://localhost:8080/">http://localhost:8080</a>
+
+</p></li><li>You must parse the request Request-Line and all request header lines, storing the key/value pairs in a Python dictionary. <!--toInstructors>See <a href="https://faculty-web.msoe.edu/yoder/cs2910/slides/cs2910-6-Lab-DictionariesInPython.pptx">slides on dictionaries in Python</a></toInstructors-->
+ <ul>
+ <li>Unless you implement additional functionality, it is unlikely that 
+you will need to make use of any of the request headers, but you should 
+store and print them after the entire request is received, so you can 
+verify that you are handling the request correctly.
+ </li><li>You do not need to print the headers in the same order they were received.  The order the dictionary iterates them is just fine.
+ </li></ul>
+</li><li>You must return an appropriate response Status-Line and header 
+lines to the requesting client, regardless of what the user types in the
+ URL. You should send a body with the message if the RFC specifies that 
+there should be one for the status code(s) you use.
+</li><li>Use a Python dictionary to store the response header lines, and then send them all at once at an appropriate time.
+</li><li>The response header lines must include: (again, in the order that a dictionary iterates is fine) 
+ <ul>
+ <li>A Date header (in proper RFC format) indicating the time that the request was satisfied.
+ </li><li>A Connection header indicating that a non-persistent connection will be used.
+ </li><li>A Content-Type header with an appropriate MIME type (you should use the provided function to get the MIME type).
+ </li><li>A Content-Length header to specify the size of the resource being returned (if there is one to return).
+  <ul>
+  <li>You are not required to use chunked encoding for any file type.
+  </li><li>Optionally, you may use chunked encoding for text/html 
+resources. If you do so, you must include the appropriate 
+Transfer-Encoding header instead of Content-Length, and format the 
+resource data appropriately in the response.
+  </li></ul>
+ </li></ul>
+</li></ul>
+
+<h2>Hints and Notes</h2>
+
+<ul>
+<li>To test your code, direct your browser to <code>localhost:8080</code>
+</li><li>As in the HTTP client lab, you will have to both send and 
+receive on the TCP connection to the HTTP client. On the receiving side,
+ since we will only be handling GET requests with no entity bodies, 
+there will likely be only one kind of data that needs to be processed: 
+"Textual" data, organized as a sequence of ASCII characters followed by 
+the CR/LF pair. Data in this category includes:
+ <ul>
+ <li>The HTTP Request-Line.
+ </li><li>Request header lines.
+ </li><li>"Blank" lines (e.g., to terminate a header). You should 
+probably have a "read line" function from the HTTP client lab, which you
+ can likely use here.
+ </li></ul>
+</li><li>Remember that when you read from the network stream with a 
+function like recv, or from a file with a function like read, you can 
+only control the maximum number of bytes that will be returned. You will
+ always get at least one byte, unless there is no more data (in the case
+ of a file or a socket that has been closed), but there is no way to 
+predict absolutely in advance how many bytes will be available when you 
+make the recv or read call.
+ <ul>
+ <li>At times, you may get fewer than the number of bytes needed (e.g., 
+in a block of "binary byte" data). If this happens, you will have to 
+make another recv call to get additional data.  If you choose to send a 
+chunked file, you may choose to send whatever recv gives you 
+immediately, instead of calling it again.  This might reduce the latency
+ of your response. 
+ </li></ul>
+</li><li>When serving resource data from a file, open the file in binary
+ ('rb') mode to avoid problems with line-ending modification on Windows.
+</li><li>Getting the proper HTTP "Date" value can be a little tricky. You can try something like this:
+<pre class="prettyprint linenums"><ol class="linenums"><li class="L0"><span class="pln">timestamp </span><span class="pun">=</span><span class="pln"> datetime</span><span class="pun">.</span><span class="pln">datetime</span><span class="pun">.</span><span class="pln">utcnow</span><span class="pun">()</span></li><li class="L1"><span class="pln">timestring </span><span class="pun">=</span><span class="pln"> timestamp</span><span class="pun">.</span><span class="pln">strftime</span><span class="pun">(</span><span class="str">'%a, %d %b %Y %H:%M:%S GMT'</span><span class="pun">)</span></li><li class="L2"><span class="pln"> 				</span><span class="com">#Sun, 06 Nov 1994 08:49:37 GMT</span></li></ol></pre>
+</li></ul>
+
+<h2>Excellent Credit</h2>
+
+<p>There is one point allocated for "excellent credit" activities beyond
+ the requirements.  A couple of things that would work well might be 
+implementing persistent connections or implementing caching.  You could 
+also implement file uploads by allowing the POST action in addition to 
+the GET action. Be sure to incorporate these cleanly into the request 
+and response header dictionaries used in your design.</p>
+
+<p>If you choose to implement the POST action, please ask, and I can 
+help you set up a page that will allow your browser to generate a POST 
+upload. (HTML is beyond the scope of this class.)</p>
+
+<p>If you decide to implement a persistent connection, you can demonstrate that it is working by capturing the request in Wireshark</p>
+
+<p>Getting the excellent credit point is <mark>a challenge</mark>.  If I
+ see that you've made an effort, I'll want to give you the point, but I 
+am reserving it for those teams which truly go above and beyond the 
+requirements, demonstrating excellence in their extra work.</p>
+
+<p>When you have questions you can't resolve, consult the instructor as soon as possible, in person or by email.</p>
+
+<!--h2>Submission (Due Friday, Week 6, 11PM)</h2>
+
+<p>One team member should submit your Python file by uploading it to the upload page.</p>
+
+<p>Please submit your file below. Please make sure your usernames are separated by hyphens and in alphabetical order.</p-->
+
+<p>(Acknowledgements: The original version of this lab written by Dr. Sebern.)</p>
+		</div>
+
+		<!--div id="submitForm" class="wrapper" style="width:90%">
+		<div class="formTitle"><header><h1>
+Submission Instructions for Dr. Yoder
+		</h1></header>
+		<div class="lRing"></div><div class="rRing"></div></div>
+		<div class="content clearfix">
+
+<h2>Submission (Week 6, Friday, 11pm)</h2>
+
+<p>Submit your lab electronically before the deadline listed above.</p>
+
+		<div id="formContent">
+		<div id="respond">
+		<form action="uploadLab6.php" enctype="multipart/form-data" method="post" id="SubmitForm">
+		<p><label for="author">MSOE usernames in alphabetical order, separated by hyphens, e.g. foggp-yoder for a two-person team.</label> <input id="author" name="username" size="30" type="text"></p>
+
+		<p><label>
+httpserver.py
+		</label> <input
+name="httpserver"
+		size="40" type="file"></p>
+
+                <p class="submitFormComment">You should submit your solution only once, so be sure you are happy with your solution before you submit it.</p>
+		<p class="formSubmit"><input name="submit" id="submit" value="Submit" type="submit">
+		</p></form></div></div>
+
+		</div></div-->
+		</article></div></section>
+		<footer class="footer">
+  <p class="contact">Office: L-344 • Phone: ƖƐ96 ᔭᔭᔭ ϛ9ㄥ (GV) • npǝ˙ǝosɯ@ɹəpoʎ</p>
+  
+  <div class="footMatter">
+    <span class="footerFace"></span>
+    <p>This is a personal faculty website. <a href="http://www.msoe.edu/">MSOE</a> may not agree with everything here.
+    </p><p class="copyright">Design © 2001-2013 <a href="http://msoe.us/taylor/">Dr. Chris Taylor</a>. Used by permission.</p>
+    <p class="copyright">Content © 2013 <a href="https://faculty-web.msoe.edu/yoder/">Dr. Josiah Yoder</a></p>
+  </div>
+  
+</footer>
+
+
+</body></html>

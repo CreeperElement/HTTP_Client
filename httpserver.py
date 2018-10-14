@@ -67,25 +67,35 @@ def handle_request(request_socket):
     request_type = read_until_space(request_socket)
     status_code = b''
     if(request_type == b'GET'):
+
         requested_file = read_until_space(request_socket)
+
+        print(requested_file)
+
+        if requested_file==b'/':
+            requested_file = b'/index.htm'
+
         file_path = requested_file.decode("ASCII")
-        file_path = file_path[1: len(file_path) - 1]
+        file_path = file_path[1: len(file_path)]
+
+        print('File path ' + file_path)
 
         if file_exists(file_path):
-            file = open(file_path)
+            file = open(file_path, 'rb')
             mime_type = get_mime_type(file_path)
-            data_payload = get_data_payload(file)
             file_length = int(get_file_size(file_path))
             http_version = read_until_CRLF(request_socket)
+            data_payload = get_data_payload(file)
 
             packet_headers = bytes(http_version) + b' 200 OK\r\n'
             packet_headers += b'Content-Length: ' + str(file_length).encode("ASCII") + b'\r\n'
+            #packet_headers += b'Content-Length: ' + b' 0'
             packet_headers += b'Content-Type: ' + bytes(mime_type.encode("ASCII")) + b'\r\n\r\n'
 
+            print(packet_headers)
 
             request_socket.sendall(packet_headers + data_payload)
-            print(packet_headers)
-            print(data_payload)
+            request_socket.close()
 
         else:
               print("Not found " + file_path)
@@ -96,7 +106,7 @@ def handle_request(request_socket):
         status_code = b'404'
 
 def get_data_payload(file):
-    body = bytes(file.read().encode("ASCII"))
+    body = file.read()
     body += b'\r\n\r\n'
     return body
 
@@ -120,14 +130,14 @@ def read_until_space(sock):
 
 def read_until_CRLF(sock):
     last_byte = sock.recv(1)
-    first_byte = sock.recv(1)
+    current_byte = sock.recv(1)
 
     message = b''
 
-    while not(last_byte == b'\r' and first_byte == b'\n'):
+    while not(last_byte == b'\r' and current_byte == b'\n' or current_byte==b''):
         message += last_byte
-        last_byte = first_byte
-        first_byte = sock.recv(1)
+        last_byte = current_byte
+        current_byte = sock.recv(1)
     return message
 
 # ** Do not modify code below this line.  You should add additional helper methods above this line.
