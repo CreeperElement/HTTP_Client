@@ -106,19 +106,34 @@ def handle_request(request_socket):
         status_code = b'404'
 
 def get_data_payload(file):
+    """
+    Gets the payload from the message
+    :param file: the file we are reading from
+    :return: body
+    """
     body = file.read()
     body += b'\r\n\r\n'
     return body
 
 def file_exists(file):
+    """
+    Checks that the file exists or throws an error
+    :param file: file we are receiving from
+    :return: boolean
+    """
     try:
         file = open(file, "r")
         return True
     except FileNotFoundError:
-        print('FOund in')
+        print('Found in')
         return False
 
 def read_until_space(sock):
+    """
+    Reads until a space is found in the message
+    :param sock: socket we are receiving the message from
+    :return: message
+    """
     byte_0 = sock.recv(1)
     message = b''
 
@@ -129,6 +144,11 @@ def read_until_space(sock):
     return message
 
 def read_until_CRLF(sock):
+    """
+    Reads until a carriage return and a new line character, or an empty byte
+    :param sock: socket we receive the file from
+    :return: message
+    """
     last_byte = sock.recv(1)
     current_byte = sock.recv(1)
 
@@ -153,7 +173,7 @@ def get_mime_type(file_path):
     :param file_path: string containing path to (resource) file, such as './abc.html'
     :return: If successful in guessing the MIME type, a string representing the content type, such as 'text/html'
              Otherwise, None
-    :rtype: int or None
+    :rtype: int or none
     """
 
     mime_type_and_encoding = mimetypes.guess_type(file_path)
