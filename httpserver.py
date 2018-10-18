@@ -52,6 +52,19 @@ def http_server_setup(port):
         server_socket.close()
 
 
+def parse_header(request_socket):
+    header_dict = {}
+    header_dict[b'request_type'] = read_until_space(request_socket)
+    header_dict[b'request_message'] = read_until_space(request_socket)
+    header_dict[b'version'] = read_until_CRLF(request_socket)
+
+    header = read_until_CRLF(request_socket)
+    while header != b'':
+        header_dict[header.split(b': ')[0]] = header.split(b': ')[1]
+        header = read_until_CRLF(request_socket)
+    return header_dict
+
+
 def handle_request(request_socket):
     """
     Handle a single HTTP request, running on a newly started thread.
@@ -64,11 +77,15 @@ def handle_request(request_socket):
     :return: None
     :author: Seth Fenske
     """
-    request_type = read_until_space(request_socket)
+
+    header_dict = parse_header(request_socket)
+    request_type = header_dict[b'request_type']
+
+
     status_code = b''
     if(request_type == b'GET'):
 
-        requested_file = read_until_space(request_socket)
+        requested_file = header_dict[b'request_message']
 
         print(requested_file)
 
@@ -78,30 +95,28 @@ def handle_request(request_socket):
         file_path = requested_file.decode("ASCII")
         file_path = file_path[1: len(file_path)]
 
-        print('File path ' + file_path)
-
         if file_exists(file_path):
             file = open(file_path, 'rb')
             mime_type = get_mime_type(file_path)
             file_length = int(get_file_size(file_path))
-            http_version = read_until_CRLF(request_socket)
-            data_payload = get_data_payload(file)
+            http_version = header_dict[b'version']
 
-            packet_headers = bytes(http_version) + b' 200 OK\r\n'
+            packet_headers = bytes(http_version) + b'HTTP/1.1 200 OK\r\n'
             packet_headers += b'Content-Length: ' + str(file_length).encode("ASCII") + b'\r\n'
             #packet_headers += b'Content-Length: ' + b' 0'
             packet_headers += b'Content-Type: ' + bytes(mime_type.encode("ASCII")) + b'\r\n\r\n'
 
-            print(packet_headers)
+            request_socket.send(packet_headers)
 
-            request_socket.sendall(packet_headers + data_payload)
+            data_payload = get_data_payload(file)
+            request_socket.send(data_payload)
             request_socket.close()
 
         else:
-              print("Not found " + file_path)
-              status_code = b'404'
+            print("Sending 404")
+            request_socket.send(b'HTTP/1.1 404 File Not Found\r\n')
 
-        status_code = b'200'
+#        request_socket.sendall(packet_headers + data_payload)
     else:
         status_code = b'404'
 
@@ -128,7 +143,7 @@ def file_exists(file):
         file = open(file, "r")
         return True
     except FileNotFoundError:
-        print('Found in')
+        print("File not found")
         return False
 
 def read_until_space(sock):
