@@ -14,7 +14,6 @@ import re
 import threading
 import os
 import mimetypes
-import datetime
 
 
 def main():
@@ -51,20 +50,6 @@ def http_server_setup(port):
         print('threads: ', threading.enumerate())
         server_socket.close()
 
-
-def parse_header(request_socket):
-    header_dict = {}
-    header_dict[b'request_type'] = read_until_space(request_socket)
-    header_dict[b'request_message'] = read_until_space(request_socket)
-    header_dict[b'version'] = read_until_CRLF(request_socket)
-
-    header = read_until_CRLF(request_socket)
-    while header != b'':
-        header_dict[header.split(b': ')[0]] = header.split(b': ')[1]
-        header = read_until_CRLF(request_socket)
-    return header_dict
-
-
 def handle_request(request_socket):
     """
     Handle a single HTTP request, running on a newly started thread.
@@ -77,22 +62,9 @@ def handle_request(request_socket):
     :return: None
     :author: Seth Fenske
     """
-
-    header_dict = parse_header(request_socket)
-    request_type = header_dict[b'request_type']
-
-
-    status_code = b''
+    header_dict, request_type = handle_header(request_socket)
     if(request_type == b'GET'):
-
-        requested_file = header_dict[b'request_message']
-
-        print(requested_file)
-
-        if requested_file==b'/':
-            requested_file = b'/index.htm'
-
-        file_path = requested_file.decode("ASCII")
+        file_path = get_requested_file(header_dict)
         file_path = file_path[1: len(file_path)]
 
         if file_exists(file_path):
@@ -101,24 +73,94 @@ def handle_request(request_socket):
             file_length = int(get_file_size(file_path))
             http_version = header_dict[b'version']
 
-            packet_headers = bytes(http_version) + b'HTTP/1.1 200 OK\r\n'
-            packet_headers += b'Content-Length: ' + str(file_length).encode("ASCII") + b'\r\n'
-            #packet_headers += b'Content-Length: ' + b' 0'
-            packet_headers += b'Content-Type: ' + bytes(mime_type.encode("ASCII")) + b'\r\n\r\n'
+            packet_headers = get_packet_headers(mime_type, file_length, http_version)
 
             request_socket.send(packet_headers)
-
-            data_payload = get_data_payload(file)
-            request_socket.send(data_payload)
+            request_socket.send(get_data_payload(file))
             request_socket.close()
-
         else:
-            print("Sending 404")
-            request_socket.send(b'HTTP/1.1 404 File Not Found\r\n')
+            send404(request_socket)
 
-#        request_socket.sendall(packet_headers + data_payload)
     else:
-        status_code = b'404'
+        send505(request_socket)
+
+def get_packet_headers(mime_type, file_length, http_version):
+    """
+    Takes the packet headers and formats them for sending.
+    :param mime_type: Mime type of the resource
+    :param file_length: Length of the resource
+    :param http_version: HTTP version specified by get request
+    :return: Vincent Zrenz
+    """
+    packet_headers = bytes(http_version) + b'HTTP/1.1 200 OK\r\n'
+    packet_headers += b'Content-Length: ' + str(file_length).encode("ASCII") + b'\r\n'
+    packet_headers += b'Content-Type: ' + bytes(mime_type.encode("ASCII")) + b'\r\n\r\n'
+    return packet_headers
+
+def handle_header(request_socket):
+    """
+    Reands the header and returns it as a dictionary
+    :param request_socket: The socket to read from
+    :return: Dictionary containing all the header information
+    :author: Seth Fenske
+    """
+    header_dict = parse_header(request_socket)
+    request_type = header_dict[b'request_type']
+    return header_dict, request_type
+
+def send505(request_socket):
+    """
+    Sends a hard-coded 505 response
+    :param request_socket: Socket to send on
+    :return: None
+    :author: Seth Fenske
+    """
+    request_socket.send(b'HTTP/1.1 505 Operation Not Supported\r\n')
+    request_socket.send(b'Content-Length: ' + str(20).encode("ASCII") + b'\r\n')
+    request_socket.send(b'Content-Type: text/html\r\n\r\n')
+    request_socket.send(b'<p>Not Supported</p>\r\n\r\n')
+
+def send404(request_socket):
+    """
+    Send a hard-coded 404 response
+    :param request_socket: Socket to send on
+    :return: None
+    :author: Seth Fenske
+    """
+    request_socket.send(b'HTTP/1.1 404 File Not Found\r\n')
+    request_socket.send(b'Content-Length: ' + str(17).encode("ASCII") + b'\r\n')
+    request_socket.send(b'Content-Type: text/html\r\n\r\n')
+    request_socket.send(b'<p>Not Found</p>\r\n\r\n')
+
+def parse_header(request_socket):
+    """
+    Reads the header into a dictionary
+    :param request_socket: Socket to read from
+    :return: The dictionary of headers
+    :author: Vincent Krenz
+    """
+    header_dict = {}
+    header_dict[b'request_type'] = read_until_space(request_socket)
+    header_dict[b'request_message'] = read_until_space(request_socket)
+    header_dict[b'version'] = read_until_CRLF(request_socket)
+
+    header = read_until_CRLF(request_socket)
+    while header != b'':
+        header_dict[header.split(b': ')[0]] = header.split(b': ')[1]
+        header = read_until_CRLF(request_socket)
+    return header_dict
+
+def get_requested_file(header_dict):
+    """
+    Gets the path of the requested file, returns index if nothing specified
+    :param header_dict: Dictionary containing requested file
+    :return: ASCII text of the file to be sent
+    :author: Vincent Krenz
+    """
+    requested_file = header_dict[b'request_message']
+    if requested_file == b'/':
+        requested_file = b'/index.htm'
+    return requested_file.decode("ASCII")
 
 def get_data_payload(file):
     """
@@ -143,7 +185,7 @@ def file_exists(file):
         file = open(file, "r")
         return True
     except FileNotFoundError:
-        print("File not found")
+        print("File not found " + file)
         return False
 
 def read_until_space(sock):
@@ -222,4 +264,5 @@ def get_file_size(file_path):
 
 main()
 
-# Replace this line with your comments on the lab
+# The lab was extremely challenging. The excellent credit didn't quite seem fair. Why should a student do
+# twice as much work for one extra point?
