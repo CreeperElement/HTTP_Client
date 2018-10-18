@@ -8,7 +8,7 @@
 
 A simple HTTP server
 """
-
+import datetime
 import socket
 import re
 import threading
@@ -69,13 +69,8 @@ def handle_request(request_socket):
 
         if file_exists(file_path):
             file = open(file_path, 'rb')
-            mime_type = get_mime_type(file_path)
-            file_length = int(get_file_size(file_path))
-            http_version = header_dict[b'version']
-
-            packet_headers = get_packet_headers(mime_type, file_length, http_version)
-
-            request_socket.send(packet_headers)
+            headers = generate_headers(file_path)
+            request_socket.send(get_packet_headers(headers))
             request_socket.send(get_data_payload(file))
             request_socket.close()
         else:
@@ -84,17 +79,33 @@ def handle_request(request_socket):
     else:
         send505(request_socket)
 
-def get_packet_headers(mime_type, file_length, http_version):
+def generate_headers(file_path):
+    """
+    As per the lab requirements, we create a dictionary of headers here
+    :return: Dictionary of all response headers
+    :author: Seth Fenske
+    """
+    headers={}
+    headers[b'mime_type'] = get_mime_type(file_path).encode("ASCII")
+    headers[b'file_length'] = int(get_file_size(file_path))
+    headers[b'version'] = b'HTTP/1.1'
+    timestamp = datetime.datetime.utcnow()
+    timestring = timestamp.strftime('%a, %d %b %Y %H:%M:%S GMT')
+    headers[b'Date'] = timestring.encode("ASCII")
+    headers[b'Connection'] = b'close'
+    return headers
+
+def get_packet_headers(dict):
     """
     Takes the packet headers and formats them for sending.
-    :param mime_type: Mime type of the resource
-    :param file_length: Length of the resource
-    :param http_version: HTTP version specified by get request
+    :param dict The dictionary containing the response headers
     :return: Vincent Zrenz
     """
-    packet_headers = bytes(http_version) + b'HTTP/1.1 200 OK\r\n'
-    packet_headers += b'Content-Length: ' + str(file_length).encode("ASCII") + b'\r\n'
-    packet_headers += b'Content-Type: ' + bytes(mime_type.encode("ASCII")) + b'\r\n\r\n'
+    packet_headers = dict[b'version'] + b' 200 OK\r\n'
+    packet_headers += b'Content-Length: ' + str(dict[b'file_length']).encode("ASCII") + b'\r\n'
+    packet_headers += b'Content-Type: ' + dict[b'mime_type'] + b'\r\n'
+    packet_headers += b'Date: ' + dict[b'Date']+b'\r\n'
+    packet_headers += b'Connection: ' + dict[b'Connection'] + b'\r\n\r\n'
     return packet_headers
 
 def handle_header(request_socket):
